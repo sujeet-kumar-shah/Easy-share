@@ -12,6 +12,6 @@ Once uploaded, you will be provided with a shortened link to share with others.
 Enjoy seamless file sharing!
 
 Contributing-
-This project is open-source and contributions are welcome! If you'd like to contribute to the design or development of this system, please feel free to reach out via email at sujeet321s@gmail.com.
+This project is open-source and contributions are welcome! If you'd like to contribute to the design or development of this system, please feel free to reach out via email at sujeetshah321s@gmail.com.
 
 We appreciate any help to make this file share system even better!
