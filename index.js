@@ -3,6 +3,10 @@ const multer = require("multer");
 const sqlite3 = require("sqlite3").verbose();
 const shortid = require("shortid");
 const path = require("path");
+const mammoth = require("mammoth");
+const { PDFDocument } = require("pdf-lib");
+const { Document, Packer, Paragraph } = require("docx");
+const fs = require("fs");
 
 const app = express();
 const port = 3000;
@@ -21,18 +25,15 @@ const upload = multer({ storage: storage });
 
 // Set up SQLite database
 const db = new sqlite3.Database("file_share.db");
-db.run(
-  "CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, fileName TEXT, fileType TEXT, textContent TEXT, timestamp INTEGER)",
-);
+db.serialize(() => {
+  db.run(
+    "CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, fileName TEXT, fileType TEXT, textContent TEXT, timestamp INTEGER)",
+  );
+});
 
 // Set up view engine
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
-// Routes
-app.get("/", (req, res) => {
-  res.render("index");
-});
 
 // Middleware to delete old files
 app.use((req, res, next) => {
@@ -44,9 +45,22 @@ app.use((req, res, next) => {
       if (err) {
         console.error("Error deleting old files:", err);
       }
+      next();
     },
   );
-  next();
+});
+
+// Routes
+app.get("/", (req, res) => {
+  res.render("index");
+});
+
+app.get("/contact", (req, res) => {
+  res.render("contact.ejs");
+});
+
+app.get("/converter", (req, res) => {
+  res.render("converter.ejs");
 });
 
 app.post("/upload", upload.single("file"), (req, res) => {
@@ -79,7 +93,11 @@ app.get("/file/:id", (req, res) => {
       res.status(500).send("Error retrieving file.");
     } else {
       if (row) {
-        res.render("file", { file: row });
+        res.render("file", {
+          file: row,
+          protocol: req.protocol,
+          host: req.get("host"),
+        });
       } else {
         res.status(404).send("File not found.");
       }
@@ -96,19 +114,72 @@ app.get("/download/:id", (req, res) => {
       res.status(500).send("Error retrieving file.");
     } else {
       if (row) {
-        const filePath = path.join(__dirname, "uploads", row.fileName);
+        if (row.fileName) {
+          const filePath = path.join(__dirname, "uploads", row.fileName);
 
-        res.download(filePath, row.fileName, (err) => {
-          if (err) {
-            console.error(err);
-            res.status(500).send("Error downloading file.");
-          }
-        });
+          res.download(filePath, row.fileName, (err) => {
+            if (err) {
+              console.error(err);
+              res.status(500).send("Error downloading file.");
+            }
+          });
+        } else {
+          res.status(404).send("File not found.");
+        }
       } else {
         res.status(404).send("File not found.");
       }
     }
   });
+});
+
+app.post("/converter", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).send("No file uploaded.");
+  }
+
+  const filePath = path.join(__dirname, "uploads", req.file.filename);
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const newFileName = `${shortid.generate()}${ext === ".pdf" ? ".docx" : ".pdf"}`;
+  const newFilePath = path.join(__dirname, "uploads", newFileName);
+
+  try {
+    if (ext === ".pdf") {
+      // PDF to DOCX
+      const pdfDoc = await PDFDocument.load(fs.readFileSync(filePath));
+      const text = await pdfDoc.getTextContent();
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: text.items.map((item) => new Paragraph(item.str)),
+          },
+        ],
+      });
+      const buffer = await Packer.toBuffer(doc);
+      fs.writeFileSync(newFilePath, buffer);
+    } else if (ext === ".docx") {
+      // DOCX to PDF
+      const result = await mammoth.extractRawText({ path: filePath });
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage();
+      page.drawText(result.value);
+      const pdfBytes = await pdfDoc.save();
+      fs.writeFileSync(newFilePath, pdfBytes);
+    } else {
+      return res.status(400).send("Unsupported file type.");
+    }
+
+    res.download(newFilePath, newFileName, (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error converting file.");
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error processing file.");
+  }
 });
 
 app.listen(port, () => {

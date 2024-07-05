@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>File Converter</title>
+<style>
+
+  * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+  }
+
+  body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+  }
+
+  /* Navigation bar styles */
+  .topnav {
+      overflow: hidden;
+      background-color: #333;
+  }
+
+  .topnav h1 {
+      float: left;
+      color: #f2f2f2;
+      text-align: center;
+      padding: 14px 16px;
+      font-size: 24px;
+      margin: 0;
+  }
+
+  .topnav a {
+      float: left;
+      color: #f2f2f2;
+      text-align: center;
+      padding: 14px 16px;
+      text-decoration: none;
+      font-size: 17px;
+  }
+
+  .topnav a:hover {
+      background-color: #ddd;
+      color: black;
+  }
+
+  .topnav a.active {
+      background-color: #04AA6D;
+      color: white;
+  }
+/* footer */
+  footer {
+      background-color: coral;
+      text-align: center;
+      padding: 10px;
+      color: white;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+  }
+  
+</style>
+  
+</head>
+<body>
+
+  <div class="topnav">
+      <h1>Easy Share</h1>
+      <a class="active" href="/">Home</a>
+      <a href="/converter">Converter</a>
+      <a href="/contact">Contact</a>
+      <a href="https://portfolio-mu-blush-10.vercel.app/">About</a> 
+  </div>
+
+
+  
+  <h1>Convert PDF to Word or Word to PDF</h1>
+  <form action="/converter" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".pdf,.docx" required>
+    <button type="submit">Convert</button>
+  </form>
+
+
+  <footer>
+      <p>© 2024  All rights reserved.</p>
+  </footer>
+
+  
+</body>
+</html>

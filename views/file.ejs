@@ -1,16 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Details</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Details</title>
+  <style>
+    /* Add any custom CSS styles here */
+  </style>
 </head>
 <body>
-    <h1>File Details</h1>
-    <p>File Name: <%= file.fileName %></p>
-    <p>File Type: <%= file.fileType %></p>
-    <p>Text Content:</p>
-    <pre><%= file.textContent %></pre>
-    <a href="/download/<%= file.id %>">Download</a>
+  <h1>File Details</h1>
+  <p>File Name: <%= file.fileName %></p>
+  <p>File Type: <%= file.fileType %></p>
+
+  <p>Download Link:</p>
+  <textarea id="downloadLink" rows="2" cols="50" readonly><%= `${protocol}://${host}/download/${file.id}` %></textarea><br><br>
+
+  <button class="copy-button" onclick="copyDownloadLink()">Copy Link</button><br><br>
+
+  <script>
+    function copyDownloadLink() {
+      const copyText = document.getElementById("downloadLink");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); /* For mobile devices */
+
+      document.execCommand("copy");
+      alert("Copied the text: " + copyText.value);
+    }
+  </script>
 </body>
 </html>
